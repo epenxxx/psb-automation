@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSB Master Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
+    <div class="max-w-5xl mx-auto space-y-6">
+        <div class="flex justify-between items-center bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div>
+                <h1 class="text-xl font-extrabold text-blue-500 tracking-wider">⚡ ZYLVE PSB MASTER PANEL</h1>
+                <p class="text-xs text-slate-400 mt-1">Operator: <span class="text-emerald-400 font-bold">{{ username }}</span></p>
+            </div>
+            <a href="/logout" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl text-xs font-semibold">Logout Panel</a>
+        </div>
+
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <h2 class="text-sm font-bold text-white mb-4">⚙️ Konfigurasi Mode Pemancar WhatsApp</h2>
+            <form id="modeForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="flex items-start gap-3 cursor-pointer p-4 bg-slate-950 rounded-xl border {% if current_mode == 'dual' %}border-blue-500 bg-blue-950/10{% else %}border-slate-800{% endif %}">
+                    <input type="radio" name="mode" value="dual" {% if current_mode == 'dual' %}checked{% endif %} class="mt-1">
+                    <div>
+                        <span class="block font-bold text-sm text-white">Dual Nomor (Direkomendasikan)</span>
+                        <span class="text-xs text-slate-400">Nomor 1 khusus interaksi teknisi. Nomor 2 khusus mengirim invoice ke pelanggan.</span>
+                    </div>
+                </label>
+                <label class="flex items-start gap-3 cursor-pointer p-4 bg-slate-950 rounded-xl border {% if current_mode == 'single' %}border-blue-500 bg-blue-950/10{% else %}border-slate-800{% endif %}">
+                    <input type="radio" name="mode" value="single" {% if current_mode == 'single' %}checked{% endif %} class="mt-1">
+                    <div>
+                        <span class="block font-bold text-sm text-white">Single Nomor (Hemat Perangkat)</span>
+                        <span class="text-xs text-slate-400">Seluruh aktivitas bot dan pengiriman nota tagihan digabung di Nomor 1 saja.</span>
+                    </div>
+                </label>
+                <div class="md:col-span-2 flex justify-end mt-1">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition">Simpan Mode</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div class="mb-4">
+                <h2 class="text-sm font-bold text-white">👮 Manajemen Whitelist Teknisi (Multiple Users)</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Masukkan nomor HP fisik saja. ID Unix Laptop akan diikat otomatis saat teknisi mengetik perintah tautan di HP-nya.</p>
+            </div>
+
+            <form id="addWhiteForm" class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-6 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <div class="md:col-span-5">
+                    <input type="text" id="wName" placeholder="Nama Operator (Cth: Budi Lapangan)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:border-blue-500 outline-none">
+                </div>
+                <div class="md:col-span-5">
+                    <input type="text" id="wPhone" placeholder="No. WhatsApp Fisik (Cth: 0812345...)" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:border-blue-500 outline-none">
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs transition">+ Tambah Akses</button>
+                </div>
+            </form>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-[11px] text-slate-400 uppercase">
+                            <th class="py-2.5 px-3">Nama Operator</th>
+                            <th class="py-2.5 px-3">WhatsApp Fisik (JID)</th>
+                            <th class="py-2.5 px-3">Status Pasangan Laptop (LID Unix)</th>
+                            <th class="py-2.5 px-3 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60 text-xs">
+                        {% for w in whitelist %}
+                        <tr class="hover:bg-slate-950/40">
+                            <td class="py-3 px-3 font-semibold text-white">{{ w.name }}</td>
+                            <td class="py-3 px-3 font-mono text-blue-400">{{ w.phone }}</td>
+                            <td class="py-3 px-3 font-mono">
+                                {% if w.lid %}
+                                <span class="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">🔒 Terikat: {{ w.lid }}</span>
+                                {% else %}
+                                <span class="text-slate-500 italic">Belum ada sesi laptop</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-3 text-right">
+                                <button onclick="delWhite({{ w.id }}, '{{ w.name }}')" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white px-2.5 py-1 rounded text-[11px] font-bold border border-red-500/20 transition">Cabut Akses</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center py-6 text-slate-500 italic text-xs">Belum ada teknisi terdaftar. Bot bisu 100%!</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center">
+                <div class="w-full flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
+                    <span class="font-bold text-xs text-slate-300">📱 NOMOR 1 : BOT & TEKNISI</span>
+                    <span id="st-bot" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400">Connecting...</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl my-2 w-64 h-64 flex items-center justify-center shadow-inner">
+                    <img id="qr-bot" src="" class="hidden w-56 h-56 object-contain">
+                    <p id="msg-bot" class="text-slate-800 text-xs font-semibold">Meminta QR...</p>
+                </div>
+                <button onclick="restartGW('wa-bot')" class="mt-4 text-[11px] text-slate-400 hover:text-white bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">🔄 Force Restart Service</button>
+            </div>
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center">
+                <div class="w-full flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
+                    <span class="font-bold text-xs text-slate-300">📩 NOMOR 2 : NOTIFIKASI BILLING</span>
+                    <span id="st-pelanggan" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400">Connecting...</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl my-2 w-64 h-64 flex items-center justify-center shadow-inner">
+                    <img id="qr-pelanggan" src="" class="hidden w-56 h-56 object-contain">
+                    <p id="msg-pelanggan" class="text-slate-800 text-xs font-semibold">Meminta QR...</p>
+                </div>
+                <button onclick="restartGW('wa-pelanggan')" class="mt-4 text-[11px] text-slate-400 hover:text-white bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">🔄 Force Restart Service</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function syncStatus() {
+            try {
+                const res = await fetch('/api/gateway-status'), d = await res.json();
+                renderBox('bot', d.bot); renderBox('pelanggan', d.pelanggan);
+            } catch(e) {}
+        }
+
+        function renderBox(id, data) {
+            const st = document.getElementById(`st-${id}`), qr = document.getElementById(`qr-${id}`), msg = document.getElementById(`msg-${id}`);
+            if (data.status === 'connected') {
+                st.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400'; st.innerText = 'TERHUBUNG';
+                qr.classList.add('hidden'); msg.classList.remove('hidden'); msg.innerText = '✅ Sesi Aktif'; msg.className = 'text-emerald-600 font-bold text-sm';
+            } else if (data.status === 'scan_qr' && data.qr) {
+                st.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400'; st.innerText = 'SCAN QR';
+                qr.src = data.qr; qr.classList.remove('hidden'); msg.classList.add('hidden');
+            } else {
+                st.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400'; st.innerText = 'DISCONNECTED';
+                qr.classList.add('hidden'); msg.classList.remove('hidden'); msg.innerText = '⚠️ Menunggu Gateway...'; msg.className = 'text-amber-600 font-semibold text-xs';
+            }
+        }
+
+        document.getElementById('modeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await fetch('/api/set-mode', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({mode: document.querySelector('input[name="mode"]:checked').value}) });
+            location.reload();
+        });
+
+        document.getElementById('addWhiteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/whitelist/add', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: document.getElementById('wName').value, phone: document.getElementById('wPhone').value}) });
+            if(res.ok) location.reload(); else alert((await res.json()).error);
+        });
+
+        async function delWhite(id, name) { if(confirm(`Cabut izin operator "${name}"?`)) { await fetch(`/api/whitelist/delete/${id}`, {method: 'POST'}); location.reload(); } }
+        async function restartGW(target) { if(confirm('Restart kontainer ' + target + '?')) await fetch('/api/restart/' + target, {method: 'POST'}); }
+
+        setInterval(syncStatus, 3000); syncStatus();
+    </script>
+</body>
+</html>
