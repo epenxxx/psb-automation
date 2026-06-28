@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Admin Baru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 flex items-center justify-center min-h-screen">
+    <div class="bg-slate-900 p-8 rounded-2xl shadow-2xl w-96 border border-slate-800">
+        <h2 class="text-xl font-bold text-white text-center mb-6">Create New Admin</h2>
+        {% if error %}
+        <div class="bg-red-500/10 border border-red-500 text-red-400 text-xs p-3 rounded mb-4 text-center">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/register" class="space-y-4">
+            <div>
+                <label class="block text-slate-300 text-xs font-semibold mb-1">Username Baru</label>
+                <input type="text" name="username" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+            </div>
+            <div>
+                <label class="block text-slate-300 text-xs font-semibold mb-1">Password</label>
+                <input type="password" name="password" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+            </div>
+            <div>
+                <label class="block text-slate-300 text-xs font-semibold mb-1">Master Token (WA_API_TOKEN)</label>
+                <input type="password" name="token" placeholder="Verifikasi keamanan" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg text-sm transition">Simpan Admin</button>
+        </form>
+        <div class="mt-4 text-center"><a href="/login" class="text-xs text-slate-400 hover:underline">Kembali ke Login</a></div>
+    </div>
+</body>
+</html>
