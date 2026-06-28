@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  psb-app:
+    build: ./app
+    container_name: zylve-psb-app
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - ${NAS_HOST_PATH}:/mnt/nas/share/bot_pelanggan
+    depends_on:
+      - wa-bot
+      - wa-pelanggan
+
+  wa-bot:
+    build: ./wa-gateway
+    container_name: zylve-wa-bot
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - WEBHOOK_URL=http://psb-app:5000/webhook
+      - API_TOKEN=${WA_API_TOKEN}
+      - SESSION_DIR=/app/session_bot
+    volumes:
+      - wa_session_bot:/app/session_bot
+
+  wa-pelanggan:
+    build: ./wa-gateway
+    container_name: zylve-wa-pelanggan
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      - PORT=8000
+      - WEBHOOK_URL=http://psb-app:5000/webhook
+      - API_TOKEN=${WA_API_TOKEN}
+      - SESSION_DIR=/app/session_pelanggan
+    volumes:
+      - wa_session_pelanggan:/app/session_pelanggan
+
+volumes:
+  wa_session_bot:
+  wa_session_pelanggan:
